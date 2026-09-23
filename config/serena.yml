@@ -1,0 +1,8 @@
+# Copied once to state/serena/.serena/serena_config.yml.
+language_backend: LSP
+agent_interface: tools
+gui_log_window: false
+web_dashboard: false
+web_dashboard_open_on_launch: false
+projects: []
+trusted_project_path_patterns: []

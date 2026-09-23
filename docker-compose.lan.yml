@@ -1,0 +1,5 @@
+# Explicit opt-in; bind only to the Pi's chosen LAN address.
+services:
+  hermes:
+    ports:
+      - "${HERMES_LAN_IP:?Set the Pi LAN IP in .env}:${HERMES_LAN_PORT:-8642}:8642"

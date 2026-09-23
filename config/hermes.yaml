@@ -1,0 +1,19 @@
+# Copied once to state/hermes/config.yaml. Edit that active copy thereafter.
+model:
+  provider: custom
+  default: "${MODEL_NAME}"
+  base_url: "${MODEL_BASE_URL}"
+  api_key: "${MODEL_API_KEY}"
+  api_mode: chat_completions
+terminal:
+  backend: local
+  cwd: /workspace
+platform_toolsets:
+  api_server: [terminal, file, serena]
+  cli: [terminal, file, serena]
+mcp_servers:
+  serena:
+    url: http://serena:9121/mcp
+    timeout: 180
+    connect_timeout: 60
+# No messaging credentials, provider login, Portal setup or dashboard enabled.

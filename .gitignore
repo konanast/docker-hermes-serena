@@ -1,0 +1,27 @@
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+
+# Persistent application data
+/state/
+/backups/
+/versions/
+
+# User projects, including project-local Serena data
+/workspace/
+
+# Migration copies may contain credentials and personal data
+/migration-staging/
+
+# Local logs and Python caches
+*.log
+__pycache__/
+*.py[cod]
+.venv/
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

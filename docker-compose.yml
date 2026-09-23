@@ -1,0 +1,79 @@
+name: hermes-serena
+services:
+  hermes:
+    image: ${HERMES_IMAGE:-nousresearch/hermes-agent:latest}
+    platform: linux/arm64
+    restart: unless-stopped
+    working_dir: /workspace
+    environment:
+      HERMES_UID: ${PUID:?Run scripts/init.sh}
+      HERMES_GID: ${PGID:?Run scripts/init.sh}
+      HERMES_HOME: /opt/data
+      HERMES_DASHBOARD: "false"
+      API_SERVER_ENABLED: "true"
+      API_SERVER_HOST: 0.0.0.0
+      API_SERVER_PORT: "8642"
+      API_SERVER_MODEL_NAME: hermes-agent
+      API_SERVER_KEY: ${HERMES_API_KEY:?Run scripts/init.sh}
+      MODEL_BASE_URL: ${MODEL_BASE_URL:?Set MODEL_BASE_URL in .env}
+      MODEL_NAME: ${MODEL_NAME:?Set MODEL_NAME in .env}
+      MODEL_API_KEY: ${MODEL_API_KEY:?Set MODEL_API_KEY in .env}
+      TERMINAL_ENV: local
+      TERMINAL_CWD: /workspace
+    # Keep the official /init entrypoint and its privilege-dropping bootstrap.
+    command: ["gateway", "run"]
+    volumes:
+      - ./state/hermes:/opt/data
+      - ./workspace:/workspace
+    networks:
+      lab:
+        aliases: [hermes]
+    depends_on:
+      serena:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8642/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    stop_grace_period: 60s
+
+  serena:
+    image: hermes-serena-local/serena:current
+    build:
+      context: .
+      dockerfile: Dockerfile.serena
+      args:
+        SERENA_IMAGE: ${SERENA_IMAGE:-ghcr.io/oraios/serena:latest}
+    platform: linux/arm64
+    user: "${PUID:?Run scripts/init.sh}:${PGID:?Run scripts/init.sh}"
+    init: true
+    restart: unless-stopped
+    working_dir: /workspace
+    environment:
+      HOME: /state
+      SERENA_HOME: /state/.serena
+      XDG_CACHE_HOME: /state/.cache
+      SERENA_DOCKER: "1"
+    entrypoint: ["/bin/bash", "/bundle/start-serena.sh"]
+    volumes:
+      - ./state/serena:/state
+      - ./workspace:/workspace
+      - ./scripts/start-serena.sh:/bundle/start-serena.sh:ro
+      - ./scripts/check-serena.py:/bundle/check-serena.py:ro
+    networks:
+      lab:
+        aliases: [serena]
+    healthcheck:
+      test: ["CMD", "/workspaces/serena/.venv/bin/python", "/bundle/check-serena.py"]
+      interval: 30s
+      timeout: 20s
+      retries: 5
+      start_period: 120s
+    stop_grace_period: 60s
+
+networks:
+  lab:
+    external: true
+    name: lab

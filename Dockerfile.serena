@@ -1,0 +1,13 @@
+# The upstream image keeps Node under /root/.nvm. Relocate its prefix so
+# the same unprivileged UID as Hermes can run Python's Node-based LSP.
+ARG SERENA_IMAGE=ghcr.io/oraios/serena:latest
+FROM ${SERENA_IMAGE}
+USER root
+RUN set -eu; prefix="$(dirname "$(dirname "$(command -v node)")")"; \
+    test "$prefix" != /usr; test "$prefix" != /usr/local; \
+    cp -a "$prefix" /opt/serena-node; chmod -R a+rX /opt/serena-node; \
+    install -m 0755 "$(command -v uv)" /usr/local/bin/uv; \
+    install -m 0755 "$(command -v uvx)" /usr/local/bin/uvx
+ENV PATH="/opt/serena-node/bin:${PATH}"
+# Compose supplies the actual host UID/GID. No application source is patched.
+USER 1000:1000
